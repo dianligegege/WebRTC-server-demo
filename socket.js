@@ -1,6 +1,5 @@
 import express from 'express';
 import { createServer } from 'https';
-// import { createServer } from 'http';
 import { Server } from 'socket.io';
 import path from "path";
 import fs from "fs";
@@ -59,13 +58,6 @@ io.on('connection', (socket) => {
   // 监听客户端发送的信令消息
   socket.on('toIce', (data) => {
     socket.to(data.roomId).emit('ice', data);
-    // if (data.type === 'sdp') {
-    //   // 处理SDP消息
-    //   handleSDPMessage(socket, data);
-    // } else if (data.type === 'ice') {
-    //   // 处理ICE消息
-    //   handleICEMessage(socket, data);
-    // }
   });
 
   socket.on('toOffer', (data) => {
@@ -124,26 +116,6 @@ function handleUserLeave (socket) {
   });
 
 }
-
-// 处理SDP消息
-function handleSDPMessage (socket, data) {
-  // 在这里处理SDP消息逻辑
-  console.log('Received SDP message:', data);
-
-  // 广播给所有连接的客户端（除了发送者）
-  socket.to(data.roomId).broadcast.emit('signal', data);
-  // socket.to(data.roomId).emit('signal', data);
-}
-
-// 处理ICE消息
-function handleICEMessage (socket, data) {
-  // 在这里处理ICE消息逻辑
-  console.log('Received ICE message:', data);
-
-  // 广播给所有连接的客户端（除了发送者）
-  socket.to(data.roomId).emit('signal', data);
-}
-
 // 启动服务器
 https.listen(3000, () => {
   console.log('Server is running on port 3000');
