@@ -12,8 +12,8 @@ const __dirname = path.dirname(__filename);
 
 //https证书
 const options = {
-  key: fs.readFileSync(path.join(__dirname, "./localhost+2-key.pem")),
-  cert: fs.readFileSync(path.join(__dirname, "./localhost+2.pem")),
+  key: fs.readFileSync(path.join(__dirname, "./assets/localhost+2-key.pem")),
+  cert: fs.readFileSync(path.join(__dirname, "./assets/localhost+2.pem")),
 };
 
 const app = express();
