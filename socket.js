@@ -57,14 +57,23 @@ io.on('connection', (socket) => {
   });
 
   // 监听客户端发送的信令消息
-  socket.on('toSignal', (data) => {
-    if (data.type === 'sdp') {
-      // 处理SDP消息
-      handleSDPMessage(data);
-    } else if (data.type === 'ice') {
-      // 处理ICE消息
-      handleICEMessage(data);
-    }
+  socket.on('toIce', (data) => {
+    socket.to(data.roomId).emit('ice', data);
+    // if (data.type === 'sdp') {
+    //   // 处理SDP消息
+    //   handleSDPMessage(socket, data);
+    // } else if (data.type === 'ice') {
+    //   // 处理ICE消息
+    //   handleICEMessage(socket, data);
+    // }
+  });
+
+  socket.on('toOffer', (data) => {
+    socket.to(data.roomId).emit('offer', data);
+  });
+
+  socket.on('toAnswer', (data) => {
+    socket.to(data.roomId).emit('answer', data);
   });
 
   // 监听客户端断开连接
@@ -117,16 +126,17 @@ function handleUserLeave (socket) {
 }
 
 // 处理SDP消息
-function handleSDPMessage (data) {
+function handleSDPMessage (socket, data) {
   // 在这里处理SDP消息逻辑
   console.log('Received SDP message:', data);
 
   // 广播给所有连接的客户端（除了发送者）
-  socket.to(data.roomId).emit('signal', data);
+  socket.to(data.roomId).broadcast.emit('signal', data);
+  // socket.to(data.roomId).emit('signal', data);
 }
 
 // 处理ICE消息
-function handleICEMessage (data) {
+function handleICEMessage (socket, data) {
   // 在这里处理ICE消息逻辑
   console.log('Received ICE message:', data);
 
