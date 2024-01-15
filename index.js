@@ -126,7 +126,4 @@ https.listen(3001, () => {
 //   io
 // };
 
-module.exports = {
-  app,
-  io
-};
+module.exports = https;
