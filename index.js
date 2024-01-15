@@ -1,24 +1,25 @@
-import express from 'express';
-import { createServer } from 'https';
-import { Server } from 'socket.io';
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
-import cors from "cors";
+const express = require('express');
+// const https = require('https');
+const { createServer } = require('https');
+const { Server } = require('socket.io');
+const path = require('path');
+const fs = require('fs');
+const { fileURLToPath } = require('url');
+const cors = require('cors');
 
 const MAX_USER_COUNT = 2;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const filename = fileURLToPath(import.meta.url);
+// const dirname = path.dirname(filename);
 
 //httpss证书
 const options = {
-  key: fs.readFileSync(path.join(__dirname, "./assets/localhost+2-key.pem")),
-  cert: fs.readFileSync(path.join(__dirname, "./assets/localhost+2.pem")),
+  // key: fs.readFileSync(path.join(dirname, "./assets/localhost+2-key.pem")),
+  // cert: fs.readFileSync(path.join(dirname, "./assets/localhost+2.pem")),
 };
 
 const app = express();
-// app.use(express.static(path.join(__dirname, "./")));
+// app.use(express.static(path.join(dirname, "./")));
 app.use(cors());
 
 const https = createServer(options, app);
@@ -120,7 +121,12 @@ function handleUserLeave (socket) {
 https.listen(3001, () => {
   console.log('Server is running on port 3000');
 });
-export default {
+// export default {
+//   app,
+//   io
+// };
+
+module.exports = {
   app,
   io
 };
