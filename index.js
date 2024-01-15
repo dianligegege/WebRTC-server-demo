@@ -1,16 +1,17 @@
-import { Server } from "socket.io";
-import express from "express";
-import https from "https";
+import express from 'express';
+import { createServer } from 'https';
+import { Server } from 'socket.io';
 import path from "path";
-import { fileURLToPath } from "url";
 import fs from "fs";
+import { fileURLToPath } from "url";
 import cors from "cors";
 
+const MAX_USER_COUNT = 2;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-//https证书
+//httpss证书
 const options = {
   key: fs.readFileSync(path.join(__dirname, "./assets/localhost+2-key.pem")),
   cert: fs.readFileSync(path.join(__dirname, "./assets/localhost+2.pem")),
@@ -18,25 +19,11 @@ const options = {
 
 const app = express();
 app.use(express.static(path.join(__dirname, "./")));
-
-// 解决了所有请求头和方式设置的繁琐问题,要携带cookie时，这种方式不适合
 app.use(cors());
 
-// 随便写一个接口测试一下
-app.get('/api/test', (req, res) => {
-  res.type('application/json');
-  res.end(JSON.stringify({ status: 0, message: '测试成功~' }, 'utf8'));
-});
+const https = createServer(options, app);
 
-
-const httpsServer = https.createServer(options, app);
-
-httpsServer.listen(3333, "0.0.0.0", () => {
-  console.log("Https server up and running...");
-});
-
-// 创建信令服务器
-const io = new Server(httpsServer, {
+const io = new Server(https, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
@@ -47,117 +34,93 @@ const io = new Server(httpsServer, {
   transport: ['websocket']
 });
 
-// 房间信息
-const ROOM_LIST = [];
-// 每个房间最多容纳的人数
-const MAX_USER_COUNT = 4;
+// 测试接口
+app.get('/api/test', (req, res) => {
+  res.type('application/json');
+  res.end(JSON.stringify({ status: 0, message: '测试成功~' }, 'utf8'));
+});
 
-io.on("connection", (socket) => {
-  console.log("connection~");
-  // 用户加入房间
-  socket.on("join", (data) => {
-    console.log("join~", data);
+
+// 监听客户端连接
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  socket.on('toJoin', (data) => {
+    console.log('join~', data);
     handleUserJoin(socket, data);
   });
-  // 用户离开房间
-  socket.on("leave", (data) => {
-    console.log("leave", data);
-    // handleUserLeave(data);
-    handleUserDisconnect(socket);
+
+  socket.on('toLeave', (data) => {
+    console.log('leave~', data);
+    handleUserLeave(socket, data);
   });
-  // 监听连接断开
-  socket.on("disconnect", () => {
-    console.log("disconnect~");
-    handleUserDisconnect(socket);
+
+  // 监听客户端发送的信令消息
+  socket.on('toIce', (data) => {
+    socket.to(data.roomId).emit('ice', data);
   });
-  //=============================
-  socket.on("offer", (data) => {
-    console.log("offer", data);
-    socket.to(data.roomId).emit("offer", data);
+
+  socket.on('toOffer', (data) => {
+    socket.to(data.roomId).emit('offer', data);
   });
-  socket.on("answer", (data) => {
-    console.log("answer", data);
-    socket.to(data.roomId).emit("answer", data);
+
+  socket.on('toAnswer', (data) => {
+    socket.to(data.roomId).emit('answer', data);
   });
-  socket.on("candidate", (data) => {
-    console.log("candidate", data);
+
+  // 监听客户端断开连接
+  socket.on('disconnect', () => {
+    handleUserLeave(socket);
   });
-  socket.on("message", (data) => {
-    console.log("offer", data);
+
+  // 监听普通消息
+  socket.on('toMessage', (data) => {
+    // 广播给所有连接的客户端（除了发送者）
+    socket.to(data.roomId).emit('message', data);
   });
 });
 
+// 用户加入房间
 function handleUserJoin (socket, data) {
-  console.log("🚀🚀🚀 / handleUserJoin", handleUserJoin);
-  const filterRoom = ROOM_LIST.filter((item) => item.roomId === data.roomId)[0];
-  let room = { roomId: data.roomId, userList: [] };
+  // 将用户加入房间
+  socket.join(data.roomId);
 
-  // 判断房间是否存在
-  if (filterRoom) {
-    room = filterRoom;
-  } else {
-    ROOM_LIST.push(room);
-  }
+  // 获取房间内所有用户
+  const clients = io.sockets.adapter.rooms.get(data.roomId);
 
-  // 每个房间人数不超过预设的人数
-  if (room.userList.length > MAX_USER_COUNT) {
-    socket.emit("error", "房间人数已满，请稍后再试");
+  console.log('zl-clients', clients.size);
+
+  // 判断房间内用户数量，如果超过2人则不允许加入
+  if (clients.size > MAX_USER_COUNT) {
+    socket.emit('full', data.roomId);
     return;
   }
 
-  // 当房间里的人数为0且管理员还没有设置，设置管理员
-  if (room.userList.length === 0) {
-    room.admin = data.userId;
-    // // 通知自己创建 offer
-    // socket.emit("createOffer", data);
-  }
-
-  // 判断用户是否已经在房间里
-  const filterUser = room.userList.filter(
-    (item) => item.userId === data.userId
-  )[0];
-  if (filterUser) {
-    socket.emit("error", "用户已在房间里");
-  } else {
-    room.userList.push(data);
-    console.log(data, "加入房间");
-    // 通知房间内的其他用户
-  }
-  socket.userId = data.userId;
+  // 将用户信息存储在socket中
+  socket.user = data.userName;
   socket.roomId = data.roomId;
 
-  // 将用户加入房间
-  socket.join(data.roomId);
-  // 通知自己加入房间成功
-  socket.emit("joined", data);
-  // 通知房间内的其他用户
-  socket.to(data.roomId).emit("welcome", data);
-  // 通知房间内的其他用户创建 offer
-  socket.to(data.roomId).emit("createOffer", data);
-  console.log("🚀🚀🚀room.userList", room.userList);
+  // 广播给所有连接的客户端（除了发送者）
+  socket.to(data.roomId).emit('join', data);
 }
 
-// 用户断开连接或离开房间，清除房间内的用户信息，关闭房间，通知房间内的其他用户
-function handleUserDisconnect (socket) {
-  console.log("🚀🚀🚀 / handleUserDisconnect", socket.userId, socket.roomId);
-  const roomId = socket.roomId;
-  const userId = socket.userId;
-  const room = ROOM_LIST.filter((item) => item.roomId === roomId)[0];
-  if (room) {
-    const userList = room.userList;
-    const filterUser = userList.filter((item) => item.userId === userId)[0];
-    if (filterUser) {
-      // 通知房间内的其他用户
-      socket.to(roomId).emit("leave", filterUser);
-      console.log(userId, "离开房间");
-      // 清除房间内的用户信息
-      room.userList = userList.filter((item) => item.userId !== userId);
-      // 关闭房间
-      if (room.userList.length === 0) {
-        ROOM_LIST.splice(ROOM_LIST.indexOf(room), 1);
-      }
-    }
-  }
-}
+// 用户断开连接或离开房间
+function handleUserLeave (socket) {
+  // 将用户从房间中移除
+  socket.leave(socket.roomId);
 
-// io.listen(3001);
+  // 广播给所有连接的客户端（除了发送者）
+  socket.to(socket.roomId).emit('leave', {
+    userName: socket.user,
+    roomId: socket.roomId
+  });
+
+}
+// 启动服务器
+https.listen(3000, () => {
+  console.log('Server is running on port 3000');
+});
+export default {
+  app,
+  io
+};
