@@ -19,7 +19,12 @@ const options = {
 
 const app = express();
 app.use(express.static(path.join(__dirname, "./")));
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ['GET', 'POST'],
+  allowedHeaders: '*',
+  credentials: false,
+}));
 
 const https = createServer(options, app);
 
@@ -28,7 +33,7 @@ const io = new Server(https, {
     origin: "*",
     methods: ["GET", "POST"],
     allowedHeaders: "*",
-    credentials: true,
+    credentials: false,
   },
   allowEIO3: true,
   transport: ['websocket']
