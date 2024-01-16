@@ -1,8 +1,7 @@
 const express = require('express');
-// const https = require('https');
 const { createServer } = require('https');
-// const { Server } = require('socket.io');
-// const path = require('path');
+const { Server } = require('socket.io');
+const path = require('path');
 // const fs = require('fs');
 // const { fileURLToPath } = require('url');
 const cors = require('cors');
@@ -19,21 +18,21 @@ const options = {
 };
 
 const app = express();
-// app.use(express.static(path.join(dirname, "./")));
+app.use(express.static(path.join(__dirname, "./")));
 app.use(cors());
 
 const https = createServer(options, app);
 
-// const io = new Server(https, {
-//   cors: {
-//     origin: "*",
-//     methods: ["GET", "POST"],
-//     allowedHeaders: "*",
-//     credentials: true,
-//   },
-//   allowEIO3: true,
-//   transport: ['websocket']
-// });
+const io = new Server(https, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: "*",
+    credentials: true,
+  },
+  allowEIO3: true,
+  transport: ['websocket']
+});
 
 // 测试接口
 app.get('/', (req, res) => {
@@ -47,43 +46,43 @@ app.get('/api/test', (req, res) => {
 
 
 // 监听客户端连接
-// io.on('connection', (socket) => {
-//   console.log('A user connected');
+io.on('connection', (socket) => {
+  console.log('A user connected');
 
-//   socket.on('toJoin', (data) => {
-//     console.log('join~', data);
-//     handleUserJoin(socket, data);
-//   });
+  socket.on('toJoin', (data) => {
+    console.log('join~', data);
+    handleUserJoin(socket, data);
+  });
 
-//   socket.on('toLeave', (data) => {
-//     console.log('leave~', data);
-//     handleUserLeave(socket, data);
-//   });
+  socket.on('toLeave', (data) => {
+    console.log('leave~', data);
+    handleUserLeave(socket, data);
+  });
 
-//   // 监听客户端发送的信令消息
-//   socket.on('toIce', (data) => {
-//     socket.to(data.roomId).emit('ice', data);
-//   });
+  // 监听客户端发送的信令消息
+  socket.on('toIce', (data) => {
+    socket.to(data.roomId).emit('ice', data);
+  });
 
-//   socket.on('toOffer', (data) => {
-//     socket.to(data.roomId).emit('offer', data);
-//   });
+  socket.on('toOffer', (data) => {
+    socket.to(data.roomId).emit('offer', data);
+  });
 
-//   socket.on('toAnswer', (data) => {
-//     socket.to(data.roomId).emit('answer', data);
-//   });
+  socket.on('toAnswer', (data) => {
+    socket.to(data.roomId).emit('answer', data);
+  });
 
-//   // 监听客户端断开连接
-//   socket.on('disconnect', () => {
-//     handleUserLeave(socket);
-//   });
+  // 监听客户端断开连接
+  socket.on('disconnect', () => {
+    handleUserLeave(socket);
+  });
 
-//   // 监听普通消息
-//   socket.on('toMessage', (data) => {
-//     // 广播给所有连接的客户端（除了发送者）
-//     socket.to(data.roomId).emit('message', data);
-//   });
-// });
+  // 监听普通消息
+  socket.on('toMessage', (data) => {
+    // 广播给所有连接的客户端（除了发送者）
+    socket.to(data.roomId).emit('message', data);
+  });
+});
 
 // 用户加入房间
 function handleUserJoin (socket, data) {
