@@ -4,7 +4,7 @@ const { Server } = require('socket.io');
 // const path = require('path');
 // const fs = require('fs');
 // const { fileURLToPath } = require('url');
-// const cors = require('cors');
+const cors = require('cors');
 
 const MAX_USER_COUNT = 2;
 
@@ -20,17 +20,7 @@ const options = {
 const app = express();
 // app.use(express.static(path.join(__dirname, "./")));
 //设置跨域访问
-app.all('*', (req, res, next) => {
-  //设置允许跨域的域名，*代表允许任意域名跨域
-  res.header('Access-Control-Allow-Origin', '*')
-  //允许的header类型
-  res.header('Access-Control-Allow-Headers', 'content-type')
-  //跨域允许的请求方式
-  res.header('Access-Control-Allow-Methods', 'DELETE,PUT,POST,GET,OPTIONS')
-  //让options尝试请求快速结束
-  if (req.method.toLowerCase() == 'options') res.send(200)
-  else next()
-})
+app.use(cors());
 
 const https = createServer(options, app);
 
@@ -39,10 +29,10 @@ const io = new Server(https, {
     origin: "*",
     methods: ["GET", "POST"],
     allowedHeaders: "*",
-    credentials: false,
+    credentials: true,
   },
   allowEIO3: true,
-  transport: ['websocket']
+  transport: ['websocket', 'polling']
 });
 
 // 测试接口
