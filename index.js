@@ -42,7 +42,7 @@ const io = new Server(https, {
   },
   allowEIO3: true,
   // transport: ['websocket', 'polling'],
-  // path: 'api/socket',
+  path: '/api/socket',
   addTrailingSlash: false
 });
 
