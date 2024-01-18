@@ -41,7 +41,9 @@ const io = new Server(https, {
     credentials: true,
   },
   allowEIO3: true,
-  transport: ['websocket', 'polling']
+  // transport: ['websocket', 'polling'],
+  // path: 'api/socket',
+  addTrailingSlash: false
 });
 
 // 测试接口
@@ -51,7 +53,7 @@ app.get('/', (req, res) => {
 
 app.get('/api/test', (req, res) => {
   res.type('application/json');
-  res.end(JSON.stringify({ status: 0, message: '测试成功~ 02' }, 'utf8'));
+  res.end(JSON.stringify({ status: 0, message: '测试成功~ 03' }, 'utf8'));
 });
 
 
