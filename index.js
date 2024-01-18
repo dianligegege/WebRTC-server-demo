@@ -1,28 +1,37 @@
 const express = require('express');
 const { createServer } = require('https');
+const http = require('http');
 const { Server } = require('socket.io');
-// const path = require('path');
-// const fs = require('fs');
+const path = require('path');
+const fs = require('fs');
 // const { fileURLToPath } = require('url');
 const cors = require('cors');
 
 const MAX_USER_COUNT = 2;
 
+// 获取项目启动配置环境变量
+const env = process.env.NODE_ENV || 'dev';
+
 // const filename = fileURLToPath(import.meta.url);
 // const dirname = path.dirname(filename);
-
-//httpss证书
-const options = {
-  // key: fs.readFileSync(path.join(dirname, "./assets/localhost+2-key.pem")),
-  // cert: fs.readFileSync(path.join(dirname, "./assets/localhost+2.pem")),
-};
 
 const app = express();
 // app.use(express.static(path.join(__dirname, "./")));
 //设置跨域访问
 app.use(cors());
 
-const https = createServer(options, app);
+let https;
+
+if (env === 'dev') {
+  //httpss证书
+  const options = {
+    key: fs.readFileSync(path.join(__dirname, "./assets/localhost+2-key.pem")),
+    cert: fs.readFileSync(path.join(__dirname, "./assets/localhost+2.pem")),
+  };
+  https = createServer(options, app);
+} else {
+  https = http.createServer(app);
+}
 
 const io = new Server(https, {
   cors: {
