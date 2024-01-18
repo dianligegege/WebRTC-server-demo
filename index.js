@@ -16,7 +16,7 @@ const env = process.env.NODE_ENV || 'dev';
 // const dirname = path.dirname(filename);
 
 const app = express();
-// app.use(express.static(path.join(__dirname, "./")));
+app.use(express.static(path.join(__dirname, "./")));
 //设置跨域访问
 app.use(cors());
 
@@ -35,10 +35,11 @@ if (env === 'dev') {
 
 const io = new Server(https, {
   cors: {
-    origin: ["https://localhost:8080", "https://web-rtc-client-demo.vercel.app"],
-    methods: ["GET", "POST"],
-    allowedHeaders: "*",
-    credentials: true,
+    // origin: ["https://localhost:8080", "https://web-rtc-client-demo.vercel.app"],
+    // methods: ["GET", "POST"],
+    // allowedHeaders: "*",
+    // credentials: true,
+    origin: '*',
   },
   allowEIO3: true,
   // transport: ['websocket', 'polling'],
@@ -53,7 +54,7 @@ app.get('/', (req, res) => {
 
 app.get('/api/test', (req, res) => {
   res.type('application/json');
-  res.end(JSON.stringify({ status: 0, message: '测试成功~ 03' }, 'utf8'));
+  res.end(JSON.stringify({ status: 0, message: '测试成功~ 04' }, 'utf8'));
 });
 
 
@@ -137,4 +138,4 @@ https.listen(3001, () => {
   console.log('Server is running on port 3001');
 });
 
-module.exports = app;
+// module.exports = app;
