@@ -35,7 +35,7 @@ if (env === 'dev') {
 
 const io = new Server(https, {
   cors: {
-    origin: "*",
+    origin: ["https://localhost:8080", "https://web-rtc-client-demo.vercel.app"],
     methods: ["GET", "POST"],
     allowedHeaders: "*",
     credentials: true,
