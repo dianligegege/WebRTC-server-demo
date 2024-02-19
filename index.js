@@ -54,7 +54,7 @@ app.get('/', (req, res) => {
 
 app.get('/api/test', (req, res) => {
   res.type('application/json');
-  res.end(JSON.stringify({ status: 0, message: '测试成功~ 04' }, 'utf8'));
+  res.end(JSON.stringify({ status: 0, data: { nage: 'logan' }, message: '测试成功~ 04' }, 'utf8'));
 });
 
 
