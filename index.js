@@ -16,6 +16,8 @@ const env = process.env.NODE_ENV || 'dev';
 // const dirname = path.dirname(filename);
 
 const app = express();
+app.use(express.urlencoded());
+app.use(express.json());
 app.use(express.static(path.join(__dirname, "./")));
 //设置跨域访问
 app.use(cors());
@@ -53,8 +55,19 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/test', (req, res) => {
-  res.type('application/json');
-  res.end(JSON.stringify({ status: 0, data: { nage: 'logan' }, message: '测试成功~ 04' }, 'utf8'));
+  setTimeout(() => {
+    // res.type('application/json');
+    res.end(JSON.stringify({ status: 0, data: { name: 'logan' }, message: '测试成功~ 01' }, 'utf8'));
+    // res.status(500).json({ error: 'Something went wrong!' });
+  }, 2000);
+});
+
+app.post('/api/test/post', (req, res) => {
+  setTimeout(() => {
+    // res.type('application/json');
+    res.end(JSON.stringify({ status: 0, data: { name: 'logan' }, message: 'post测试成功~ 02' }, 'utf8'));
+    // res.status(404).json({ error: 'Something went wrong!' });
+  }, 2000);
 });
 
 
