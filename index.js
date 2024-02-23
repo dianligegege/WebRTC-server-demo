@@ -73,7 +73,7 @@ app.post('/api/test/post', (req, res) => {
 
 // 监听客户端连接
 io.on('connection', (socket) => {
-  console.log('A user connected');
+  // console.log('A user connected');
 
   socket.on('toJoin', (data) => {
     console.log('join~', data);
@@ -87,10 +87,12 @@ io.on('connection', (socket) => {
 
   // 监听客户端发送的信令消息
   socket.on('toIce', (data) => {
+    console.log('zl-toIce', data);
     socket.to(data.roomId).emit('ice', data);
   });
 
   socket.on('toOffer', (data) => {
+    console.log('zl-toOffer', data);
     socket.to(data.roomId).emit('offer', data);
   });
 
@@ -105,8 +107,12 @@ io.on('connection', (socket) => {
 
   // 监听普通消息
   socket.on('toMessage', (data) => {
+    console.log('zl-toMessage', data);
     // 广播给所有连接的客户端（除了发送者）
-    socket.to(data.roomId).emit('message', data);
+    socket.to(data.roomId).emit('message', {
+      ...data,
+      timestamp: new Date().getTime(),
+    });
   });
 });
 
@@ -118,7 +124,7 @@ function handleUserJoin (socket, data) {
   // 获取房间内所有用户
   const clients = io.sockets.adapter.rooms.get(data.roomId);
 
-  console.log('zl-clients', clients.size);
+  // console.log('zl-clients', clients.size);
 
   // 判断房间内用户数量，如果超过2人则不允许加入
   if (clients.size > MAX_USER_COUNT) {
